@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>Bible Verse Match</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0D0C0A;
+    --bg2:#12100D;
+    --panel:#171410;
+    --panel2:#1D1913;
+    --line:#2B251B;
+    --line-soft:#221E17;
+    --text:#EFE9DB;
+    --muted:#A79E8D;
+    --muted2:#7E7768;
+    --gold:#D9A441;
+    --gold-light:#F0C96A;
+    --gold-dim:rgba(217,164,65,.14);
+    --radius:20px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(217,164,65,.13), transparent 60%),
+      radial-gradient(700px 500px at -10% 30%, rgba(217,164,65,.06), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:"Manrope",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  button{font-family:inherit; cursor:pointer; min-height:44px}
+  a{color:var(--gold-light)}
+
+  .wrap{max-width:1120px; margin:0 auto; padding:28px 20px 56px}
+
+  /* ---------- Intro ---------- */
+  .intro{max-width:640px; margin:10px 0 28px}
+  .intro h1{
+    font-family:"Fraunces",serif; font-weight:500;
+    font-size:clamp(38px,6vw,62px); line-height:.98; letter-spacing:-.02em;
+    margin:6px 0 14px;
+  }
+  .intro h1 em{font-style:italic; color:var(--gold-light)}
+  .intro p{color:var(--muted); font-size:16px; line-height:1.65; margin:0; max-width:52ch}
+  .intro p strong{color:var(--text)}
+
+  /* ---------- Layout ---------- */
+  .layout{display:grid; grid-template-columns: 420px 1fr; gap:22px; align-items:start}
+  @media(max-width:860px){ .layout{grid-template-columns:1fr} }
+
+  .card{
+    background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+  }
+
+  /* ---------- Picker ---------- */
+  .picker{padding:22px}
+  .step-label{
+    display:flex; align-items:center; gap:10px;
+    font-size:11px; letter-spacing:.16em; text-transform:uppercase; font-weight:800; color:var(--muted);
+    margin:0 0 12px;
+  }
+  .step-label b{
+    display:grid; place-items:center; width:22px;height:22px;border-radius:50%;
+    background:var(--gold); color:#171208; font-size:12px; letter-spacing:0;
+  }
+  .step-label + .step-label{margin-top:26px}
+
+  .tabs{
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;
+    background:#0A0908; border:1px solid var(--line-soft); border-radius:14px; padding:6px;
+  }
+  .tab{
+    border:0; border-radius:10px; background:transparent; color:var(--muted);
+    font-weight:800; font-size:14px; padding:10px 6px; min-height:48px;
+    display:flex; flex-direction:column; align-items:center; gap:2px; line-height:1.1;
+  }
+  .tab small{font-weight:600; font-size:11px; color:var(--muted2); letter-spacing:.01em}
+  .tab[aria-selected="true"]{background:var(--gold); color:#1A1406}
+  .tab[aria-selected="true"] small{color:rgba(26,20,6,.65)}
+  .tab:focus-visible, .chip:focus-visible, .btn:focus-visible{outline:2px solid var(--gold-light); outline-offset:2px}
+
+  .cat-note{color:var(--muted); font-size:13.5px; line-height:1.55; margin:12px 2px 0}
+
+  .chips{display:flex; flex-wrap:wrap; gap:9px; margin-top:4px}
+  .chip{
+    border:1px solid var(--line); background:#100E0B; color:var(--text);
+    border-radius:999px; padding:10px 16px; font-size:14.5px; font-weight:700;
+    display:inline-flex; align-items:center; gap:8px; min-height:44px;
+    transition:border-color .15s, background .15s, transform .1s;
+  }
+  .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--muted2); flex:none}
+  .chip:hover{border-color:#4A3F28}
+  .chip:active{transform:scale(.97)}
+  .chip[aria-pressed="true"]{background:var(--gold-dim); border-color:var(--gold); color:var(--gold-light)}
+  .chip[aria-pressed="true"] .dot{background:var(--gold); box-shadow:0 0 8px var(--gold)}
+
+  .surprise{
+    width:100%; margin-top:26px;
+    background:transparent; border:1px dashed #3D3423; color:var(--gold-light);
+    border-radius:12px; font-weight:800; font-size:14px; padding:12px;
+  }
+  .surprise:hover{border-color:var(--gold); background:var(--gold-dim)}
+
+  /* ---------- Verse panel ---------- */
+  .verse-panel{position:sticky; top:20px; overflow:hidden}
+  @media(max-width:860px){ .verse-panel{position:static} }
+
+  .empty{
+    padding:52px 34px; text-align:center;
+  }
+  .empty .flame{font-size:30px; line-height:1; filter:grayscale(.1)}
+  .empty h2{font-family:"Fraunces",serif; font-weight:500; font-size:28px; margin:16px 0 8px}
+  .empty p{color:var(--muted); line-height:1.65; margin:0 auto; max-width:36ch; font-size:15px}
+
+  .verse-view{padding:34px 34px 26px; display:none}
+  .verse-view.show{display:block; animation:rise .45s ease both}
+  @keyframes rise{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+  @media(prefers-reduced-motion:reduce){ .verse-view.show{animation:none} }
+
+  .verse-top{display:flex; align-items:flex-start; justify-content:space-between; gap:16px}
+  .matched{
+    font-size:11px; letter-spacing:.16em; text-transform:uppercase; font-weight:800; color:var(--muted);
+  }
+  .matched strong{display:block; color:var(--gold-light); font-size:13px; letter-spacing:.04em; text-transform:none; margin-top:5px; font-family:"Fraunces",serif; font-style:italic; font-weight:500}
+  .fav-btn{
+    flex:none; width:44px; height:44px; min-height:44px; border-radius:50%;
+    border:1px solid var(--line); background:#100E0B; color:var(--muted);
+    display:grid; place-items:center; font-size:18px;
+  }
+  .fav-btn.active{color:#1A1406; background:var(--gold); border-color:var(--gold)}
+
+  .verse-text{
+    font-family:"Fraunces",serif; font-weight:500; font-style:italic;
+    font-size:clamp(26px,3.4vw,36px); line-height:1.28; letter-spacing:-.01em;
+    margin:22px 0 18px; color:#F6F0DF;
+  }
+  .verse-text::before{content:"“"; color:var(--gold); margin-right:2px}
+  .verse-text::after{content:"”"; color:var(--gold); margin-left:2px}
+
+  .ref-row{display:flex; flex-wrap:wrap; align-items:center; gap:10px}
+  .ref{
+    font-weight:800; font-size:14px; color:#0F0D09; background:var(--gold-light);
+    padding:7px 12px; border-radius:999px;
+  }
+  .trans{color:var(--muted2); font-size:12.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase}
+
+  .reflection{
+    margin-top:24px; padding:18px; border-radius:14px;
+    background:#0E0C09; border:1px solid var(--line-soft);
+  }
+  .reflection h3{margin:0 0 6px; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); font-weight:800}
+  .reflection p{margin:0; color:#D8D0BE; line-height:1.65; font-size:15px}
+
+  .actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:22px}
+  .btn{
+    border-radius:999px; padding:11px 18px; font-weight:800; font-size:14px;
+    display:inline-flex; align-items:center; gap:8px; min-height:46px; border:1px solid var(--line);
+  }
+  .btn-primary{background:var(--gold); border-color:var(--gold); color:#1A1406}
+  .btn-primary:hover{background:var(--gold-light)}
+  .btn-ghost{background:transparent; color:var(--text)}
+  .btn-ghost:hover{border-color:#4A3F28; background:rgba(255,255,255,.03)}
+  .counter{margin-left:auto; align-self:center; color:var(--muted2); font-size:13px; font-weight:700}
+
+  /* ---------- Favorites & tonight ---------- */
+  .below{display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:22px}
+  @media(max-width:860px){ .below{grid-template-columns:1fr} }
+  .mini{padding:22px}
+  .mini h2{font-family:"Fraunces",serif; font-weight:500; font-size:22px; margin:0 0 6px}
+  .mini .sub{color:var(--muted); font-size:13.5px; line-height:1.55; margin:0 0 14px}
+  .fav-list{display:grid; gap:10px}
+  .fav-item{
+    text-align:left; width:100%; background:#0E0C09; border:1px solid var(--line-soft); color:var(--text);
+    border-radius:12px; padding:13px 15px; min-height:48px;
+  }
+  .fav-item b{display:block; color:var(--gold-light); font-size:13px; margin-bottom:3px}
+  .fav-item span{font-family:"Fraunces",serif; font-style:italic; font-size:15px; line-height:1.45; color:#D8D0BE; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+  .fav-empty{color:var(--muted2); font-size:14px; border:1px dashed var(--line); border-radius:12px; padding:16px; text-align:center}
+  .tonight-verse{font-family:"Fraunces",serif; font-style:italic; font-size:19px; line-height:1.5; color:#EDE5D0; margin:0 0 8px}
+  .tonight-ref{color:var(--gold); font-weight:800; font-size:13px}
+
+  footer{margin-top:34px; color:var(--muted2); font-size:13px; line-height:1.6; text-align:center}
+  footer strong{color:var(--muted)}
+
+  .toast{
+    position:fixed; left:50%; bottom:22px; transform:translate(-50%,16px);
+    background:var(--gold-light); color:#1A1406; font-weight:800; font-size:14px;
+    padding:12px 18px; border-radius:999px; opacity:0; pointer-events:none; transition:.25s; z-index:50;
+    box-shadow:0 12px 32px rgba(0,0,0,.5);
+  }
+  .toast.show{opacity:1; transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="intro">
+    <h1>A verse for <em>right where</em> you are.</h1>
+    <p>Tell it honestly — pick a <strong>mood</strong>, a <strong>thought</strong> you can't shake, or a <strong>situation</strong> you're in. You'll get a matched verse, a short reflection, and room to sit with it.</p>
+  </header>
+
+  <div class="layout">
+    <!-- Picker -->
+    <section class="card picker" aria-label="Choose what matches you">
+      <p class="step-label"><b>1</b> Start with a category</p>
+      <div class="tabs" role="tablist" aria-label="Category">
+        <button class="tab" role="tab" data-cat="mood" aria-selected="true">Mood<small>How you feel</small></button>
+        <button class="tab" role="tab" data-cat="thoughts" aria-selected="false">Thoughts<small>What's on your mind</small></button>
+        <button class="tab" role="tab" data-cat="situation" aria-selected="false">Situation<small>What you're facing</small></button>
+      </div>
+      <p class="cat-note" id="catNote"></p>
+
+      <p class="step-label"><b>2</b> <span id="step2Label">Pick the closest feeling</span></p>
+      <div class="chips" id="chips"></div>
+
+      <button class="surprise" id="surpriseBtn">✦ &nbsp;Surprise me with a verse</button>
+    </section>
+
+    <!-- Verse -->
+    <section class="card verse-panel" aria-live="polite">
+      <div class="empty" id="emptyState">
+        <div class="flame" aria-hidden="true">🕯️</div>
+        <h2>Your verse will appear here</h2>
+        <p>Choose a category on the left, then tap the feeling, thought, or situation closest to yours.</p>
+      </div>
+
+      <div class="verse-view" id="verseView">
+        <div class="verse-top">
+          <div class="matched">Matched for<strong id="matchedFor">—</strong></div>
+          <button class="fav-btn" id="favBtn" aria-label="Save this verse to favorites" aria-pressed="false">♥</button>
+        </div>
+
+        <p class="verse-text" id="verseText"></p>
+        <div class="ref-row">
+          <span class="ref" id="verseRef"></span>
+          <span class="trans">New International Version</span>
+        </div>
+
+        <div class="reflection">
+          <h3>Sit with this</h3>
+          <p id="reflectionText"></p>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="anotherBtn">↻ Another verse</button>
+          <button class="btn btn-ghost" id="copyBtn">Copy verse</button>
+          <span class="counter" id="counter"></span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="below">
+    <section class="card mini" aria-label="Saved verses">
+      <h2>Kept verses</h2>
+      <p class="sub">Verses you save with the ♥ button stay here for this visit — tap one to read it again.</p>
+      <div class="fav-list" id="favList">
+        <div class="fav-empty">Nothing kept yet. When a verse lands, save it here.</div>
+      </div>
+    </section>
+
+    <section class="card mini" aria-label="Tonight's word">
+      <h2>Tonight's word</h2>
+      <p class="sub">One verse for the end of the day — it changes daily.</p>
+      <p class="tonight-verse" id="tonightVerse"></p>
+      <span class="tonight-ref" id="tonightRef"></span>
+    </section>
+  </div>
+
+  <footer>
+    Built for quiet, low-light reading: warm charcoal, candle-gold, and large serif type so the verse itself does the talking.
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+var DATA = {
+  mood: {
+    note: "Name the feeling first. Scripture meets moods honestly — joy, grief, anger, and fear all have a verse waiting.",
+    step2: "Pick the closest feeling",
+    topics: [
+      { id:"anxious", label:"Anxious", reflection:"You don't have to calm yourself down before you pray. Bring the worry as it is — peace is promised on the other side of handing it over.", verses:[
+        {t:"Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which transcends all understanding, will guard your hearts and your minds in Christ Jesus.", r:"Philippians 4:6–7"},
+        {t:"So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.", r:"Isaiah 41:10"},
+        {t:"Cast all your anxiety on him because he cares for you.", r:"1 Peter 5:7"}
+      ]},
+      { id:"joyful", label:"Joyful", reflection:"Joy is worth naming out loud. Today counts as a gift — receive it fully instead of rushing past it.", verses:[
+        {t:"The LORD has done it this very day; let us rejoice today and be glad.", r:"Psalm 118:24"},
+        {t:"You make known to me the path of life; you will fill me with joy in your presence, with eternal pleasures at your right hand.", r:"Psalm 16:11"},
+        {t:"Do not grieve, for the joy of the LORD is your strength.", r:"Nehemiah 8:10"}
+      ]},
+      { id:"sad", label:"Sad / Grieving", reflection:"A broken heart is not a faith failure. This verse says God draws near to it — He doesn't wait for you to feel better first.", verses:[
+        {t:"The LORD is close to the brokenhearted and saves those who are crushed in spirit.", r:"Psalm 34:18"},
+        {t:"Blessed are those who mourn, for they will be comforted.", r:"Matthew 5:4"},
+        {t:"He will wipe every tear from their eyes. There will be no more death or mourning or crying or pain, for the old order of things has passed away.", r:"Revelation 21:4"}
+      ]},
+      { id:"angry", label:"Angry", reflection:"Anger itself isn't the sin — what it makes you say and do can be. Slow down the words before they do damage you can't take back.", verses:[
+        {t:"My dear brothers and sisters, take note of this: Everyone should be quick to listen, slow to speak and slow to become angry, because human anger does not produce the righteousness that God desires.", r:"James 1:19–20"},
+        {t:"A gentle answer turns away wrath, but a harsh word stirs up anger.", r:"Proverbs 15:1"},
+        {t:"In your anger do not sin: Do not let the sun go down while you are still angry.", r:"Ephesians 4:26"}
+      ]},
+      { id:"lonely", label:"Lonely", reflection:"Feeling alone and being alone are two different things. This promise doesn't depend on who stayed — it's about Who never leaves.", verses:[
+        {t:"The LORD himself goes before you and will be with you; he will never leave you nor forsake you. Do not be afraid; do not be discouraged.", r:"Deuteronomy 31:8"},
+        {t:"Though my father and mother forsake me, the LORD will receive me.", r:"Psalm 27:10"},
+        {t:"And surely I am with you always, to the very end of the age.", r:"Matthew 28:20"}
+      ]},
+      { id:"grateful", label:"Grateful", reflection:"Gratitude grows when it's spoken. Name one specific mercy from today before the day closes.", verses:[
+        {t:"Give thanks in all circumstances; for this is God’s will for you in Christ Jesus.", r:"1 Thessalonians 5:18"},
+        {t:"Give thanks to the LORD, for he is good; his love endures forever.", r:"Psalm 107:1"},
+        {t:"Enter his gates with thanksgiving and his courts with praise; give thanks to him and praise his name.", r:"Psalm 100:4"}
+      ]},
+      { id:"weary", label:"Weary / Tired", reflection:"Rest here is an invitation, not a reward for finishing everything. You are allowed to come tired, exactly as you are.", verses:[
+        {t:"Come to me, all you who are weary and burdened, and I will give you rest.", r:"Matthew 11:28"},
+        {t:"But those who hope in the LORD will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.", r:"Isaiah 40:31"},
+        {t:"Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up.", r:"Galatians 6:9"}
+      ]},
+      { id:"afraid", label:"Afraid", reflection:"Courage in Scripture is rarely the absence of fear — it's trust spoken while afraid. Say it like the psalmist did: when I am afraid, I will trust.", verses:[
+        {t:"Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the LORD your God will be with you wherever you go.", r:"Joshua 1:9"},
+        {t:"When I am afraid, I put my trust in you.", r:"Psalm 56:3"},
+        {t:"For the Spirit God gave us does not make us timid, but gives us power, love and self-discipline.", r:"2 Timothy 1:7"}
+      ]},
+      { id:"hopeful", label:"Hopeful", reflection:"Hope here isn't wishful thinking — it's anchored in God's character. His mercies reset every morning, including tomorrow.", verses:[
+        {t:"For I know the plans I have for you, declares the LORD, plans to prosper you and not to harm you, plans to give you hope and a future.", r:"Jeremiah 29:11"},
+        {t:"Because of the LORD’s great love we are not consumed, for his compassions never fail. They are new every morning; great is your faithfulness.", r:"Lamentations 3:22–23"},
+        {t:"May the God of hope fill you with all joy and peace as you trust in him, so that you may overflow with hope by the power of the Holy Spirit.", r:"Romans 15:13"}
+      ]}
+    ]
+  },
+  thoughts: {
+    note: "Sometimes it's not a feeling — it's a sentence looping in your head. Pick the one that sounds like yours tonight.",
+    step2: "Pick the thought that's looping",
+    topics: [
+      { id:"worrying", label:"“I can't stop worrying”", reflection:"Worry rehearses a future God hasn't asked you to carry yet. Today's portion is enough for today — tomorrow has its own grace.", verses:[
+        {t:"Therefore do not worry about tomorrow, for tomorrow will worry about itself. Each day has enough trouble of its own.", r:"Matthew 6:34"},
+        {t:"Cast your cares on the LORD and he will sustain you; he will never let the righteous be shaken.", r:"Psalm 55:22"}
+      ]},
+      { id:"notenough", label:"“I feel not enough”", reflection:"Your weakness isn't disqualifying — in this verse it's the exact place God's strength shows up most clearly.", verses:[
+        {t:"My grace is sufficient for you, for my power is made perfect in weakness.", r:"2 Corinthians 12:9"},
+        {t:"I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well.", r:"Psalm 139:14"}
+      ]},
+      { id:"direction", label:"“I need direction”", reflection:"Direction is promised to trust, not to perfect planning. Acknowledge Him in the next small step, not just the final destination.", verses:[
+        {t:"Trust in the LORD with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight.", r:"Proverbs 3:5–6"},
+        {t:"I will instruct you and teach you in the way you should go; I will counsel you with my loving eye on you.", r:"Psalm 32:8"}
+      ]},
+      { id:"giveup", label:"“I want to give up”", reflection:"Stopping isn't the same as being stopped. Your work is seen, and the harvest side of this story hasn't arrived yet.", verses:[
+        {t:"Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up.", r:"Galatians 6:9"},
+        {t:"But as for you, be strong and do not give up, for your work will be rewarded.", r:"2 Chronicles 15:7"}
+      ]},
+      { id:"doubting", label:"“I'm doubting God”", reflection:"This prayer was prayed by a doubting man — and Jesus answered it, not rebuked it. Honest doubt brought to God is still faith talking.", verses:[
+        {t:"I do believe; help me overcome my unbelief!", r:"Mark 9:24"},
+        {t:"If any of you lacks wisdom, you should ask God, who gives generously to all without finding fault, and it will be given to you.", r:"James 1:5"}
+      ]},
+      { id:"forgiveness", label:"“I need forgiveness”", reflection:"Confession isn't God finding out — it's you agreeing with what He already knows, and meeting the faithfulness waiting there.", verses:[
+        {t:"If we confess our sins, he is faithful and just and will forgive us our sins and purify us from all unrighteousness.", r:"1 John 1:9"},
+        {t:"As far as the east is from the west, so far has he removed our transgressions from us.", r:"Psalm 103:12"}
+      ]},
+      { id:"restless", label:"“My mind won't rest”", reflection:"Peace here is kept, not manufactured — a mind steadfast on God is guarded through the night, not emptied by force.", verses:[
+        {t:"You will keep in perfect peace those whose minds are steadfast, because they trust in you.", r:"Isaiah 26:3"},
+        {t:"In peace I will lie down and sleep, for you alone, LORD, make me dwell in safety.", r:"Psalm 4:8"}
+      ]},
+      { id:"forgotten", label:"“I feel forgotten”", reflection:"People forget. This verse answers with an image: your name engraved on His palms — not written in pencil, carved in.", verses:[
+        {t:"Can a mother forget the baby at her breast and have no compassion on the child she has borne? Though she may forget, I will not forget you! See, I have engraved you on the palms of my hands.", r:"Isaiah 49:15–16"},
+        {t:"Be strong and courageous. Do not be afraid or terrified because of them, for the LORD your God goes with you; he will never leave you nor forsake you.", r:"Deuteronomy 31:6"}
+      ]}
+    ]
+  },
+  situation: {
+    note: "Life circumstances — a decision, a loss, a waiting room. Pick what's in front of you and take the verse into it.",
+    step2: "Pick your situation",
+    topics: [
+      { id:"decision", label:"Facing a big decision", reflection:"Wisdom is asked for, not earned. Ask plainly, decide prayerfully, and commit the outcome instead of carrying it alone.", verses:[
+        {t:"If any of you lacks wisdom, you should ask God, who gives generously to all without finding fault, and it will be given to you.", r:"James 1:5"},
+        {t:"Commit to the LORD whatever you do, and he will establish your plans.", r:"Proverbs 16:3"}
+      ]},
+      { id:"loss", label:"Going through loss", reflection:"This peace isn't the world settling down — it's given in the middle of trouble, to a heart He tells not to be afraid.", verses:[
+        {t:"Peace I leave with you; my peace I give you. I do not give to you as the world gives. Do not let your hearts be troubled and do not be afraid.", r:"John 14:27"},
+        {t:"The LORD is close to the brokenhearted and saves those who are crushed in spirit.", r:"Psalm 34:18"}
+      ]},
+      { id:"newthing", label:"Starting something new", reflection:"New beginnings in Scripture often start in wilderness places. A way being made there is the pattern, not the exception.", verses:[
+        {t:"See, I am doing a new thing! Now it springs up; do you not perceive it? I am making a way in the wilderness and streams in the wasteland.", r:"Isaiah 43:19"},
+        {t:"Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the LORD your God will be with you wherever you go.", r:"Joshua 1:9"}
+      ]},
+      { id:"waiting", label:"Waiting for an answer", reflection:"Waiting is treated as an act of courage here, not a pause in the story. Strength is being renewed while you wait, not only after.", verses:[
+        {t:"Wait for the LORD; be strong and take heart and wait for the LORD.", r:"Psalm 27:14"},
+        {t:"The LORD is good to those whose hope is in him, to the one who seeks him.", r:"Lamentations 3:25"}
+      ]},
+      { id:"conflict", label:"In conflict with someone", reflection:"“As far as it depends on you” — your part is peace, even when you can't control theirs. Do your part cleanly and leave the rest.", verses:[
+        {t:"If it is possible, as far as it depends on you, live at peace with everyone.", r:"Romans 12:18"},
+        {t:"Blessed are the peacemakers, for they will be called children of God.", r:"Matthew 5:9"}
+      ]},
+      { id:"money", label:"Financial stress", reflection:"The promise pairs provision with presence: supply for the need, and a God who says He will never leave — in that order of comfort.", verses:[
+        {t:"And my God will meet all your needs according to the riches of his glory in Christ Jesus.", r:"Philippians 4:19"},
+        {t:"Keep your lives free from the love of money and be content with what you have, because God has said, Never will I leave you; never will I forsake you.", r:"Hebrews 13:5"}
+      ]},
+      { id:"illness", label:"Illness / hoping for healing", reflection:"God is presented here as the one who forgives and heals — bring the body and the heart to Him together, not separately.", verses:[
+        {t:"Praise the LORD, my soul, and forget not all his benefits — who forgives all your sins and heals all your diseases.", r:"Psalm 103:2–3"},
+        {t:"The LORD sustains them on their sickbed and restores them from their bed of illness.", r:"Psalm 41:3"}
+      ]},
+      { id:"win", label:"Celebrating a win", reflection:"A win is a good place to trace the gift back to the Giver. Gratitude keeps success from quietly becoming self-credit.", verses:[
+        {t:"Every good and perfect gift is from above, coming down from the Father of the heavenly lights, who does not change like shifting shadows.", r:"James 1:17"},
+        {t:"The LORD has done it this very day; let us rejoice today and be glad.", r:"Psalm 118:24"}
+      ]}
+    ]
+  }
+};
+
+var TONIGHT = [
+  {t:"Because of the LORD’s great love we are not consumed, for his compassions never fail. They are new every morning; great is your faithfulness.", r:"Lamentations 3:22–23"},
+  {t:"Come to me, all you who are weary and burdened, and I will give you rest.", r:"Matthew 11:28"},
+  {t:"You will keep in perfect peace those whose minds are steadfast, because they trust in you.", r:"Isaiah 26:3"},
+  {t:"In peace I will lie down and sleep, for you alone, LORD, make me dwell in safety.", r:"Psalm 4:8"},
+  {t:"The LORD is my shepherd, I lack nothing. He makes me lie down in green pastures, he leads me beside quiet waters.", r:"Psalm 23:1–2"},
+  {t:"Wait for the LORD; be strong and take heart and wait for the LORD.", r:"Psalm 27:14"},
+  {t:"Be still, and know that I am God; I will be exalted among the nations, I will be exalted in the earth.", r:"Psalm 46:10"}
+];
+
+var state = { cat:"mood", topic:null, idx:0, favorites:[] };
+
+var chipsEl = document.getElementById('chips');
+var catNoteEl = document.getElementById('catNote');
+var step2El = document.getElementById('step2Label');
+var emptyEl = document.getElementById('emptyState');
+var viewEl = document.getElementById('verseView');
+var toastEl = document.getElementById('toast');
+var toastTimer = null;
+
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 2200);
+}
+
+function renderChips(){
+  var cat = DATA[state.cat];
+  catNoteEl.textContent = cat.note;
+  step2El.textContent = cat.step2;
+  chipsEl.innerHTML = "";
+  cat.topics.forEach(function(topic){
+    var b = document.createElement('button');
+    b.className = 'chip';
+    b.setAttribute('aria-pressed', state.topic && state.topic.id === topic.id ? 'true' : 'false');
+    b.innerHTML = '<span class="dot"></span>' + topic.label.replace(/</g,'&lt;');
+    b.addEventListener('click', function(){ selectTopic(topic); });
+    chipsEl.appendChild(b);
+  });
+}
+
+function currentVerse(){
+  if(!state.topic) return null;
+  return state.topic.verses[state.idx % state.topic.verses.length];
+}
+
+function isFav(v){
+  return state.favorites.some(function(f){ return f.r === v.r && f.t === v.t; });
+}
+
+function showVerse(){
+  var v = currentVerse();
+  if(!v) return;
+  emptyEl.style.display = 'none';
+  viewEl.classList.remove('show');
+  void viewEl.offsetWidth;
+  viewEl.classList.add('show');
+  document.getElementById('matchedFor').textContent = state.topic.label.replace(/[“”]/g,'');
+  document.getElementById('verseText').textContent = v.t;
+  document.getElementById('verseRef').textContent = v.r;
+  document.getElementById('reflectionText').textContent = state.topic.reflection;
+  document.getElementById('counter').textContent = (state.idx % state.topic.verses.length + 1) + ' of ' + state.topic.verses.length;
+  var favBtn = document.getElementById('favBtn');
+  var active = isFav(v);
+  favBtn.classList.toggle('active', active);
+  favBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  if(window.innerWidth <= 860){ viewEl.scrollIntoView({behavior:'smooth', block:'start'}); }
+}
+
+function selectTopic(topic){
+  state.topic = topic;
+  state.idx = 0;
+  renderChips();
+  showVerse();
+}
+
+document.querySelectorAll('.tab').forEach(function(tab){
+  tab.addEventListener('click', function(){
+    document.querySelectorAll('.tab').forEach(function(t){ t.setAttribute('aria-selected','false'); });
+    tab.setAttribute('aria-selected','true');
+    state.cat = tab.getAttribute('data-cat');
+    state.topic = null;
+    renderChips();
+    emptyEl.style.display = 'block';
+    viewEl.classList.remove('show');
+  });
+});
+
+document.getElementById('anotherBtn').addEventListener('click', function(){
+  if(!state.topic) return;
+  state.idx = (state.idx + 1) % state.topic.verses.length;
+  showVerse();
+});
+
+document.getElementById('copyBtn').addEventListener('click', function(){
+  var v = currentVerse();
+  if(!v) return;
+  var text = '"' + v.t + '" — ' + v.r + ' (NIV)';
+  function done(){ toast('Verse copied'); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(function(){ fallback(); });
+  } else { fallback(); }
+  function fallback(){
+    var ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); done(); }catch(e){ toast('Copy not available here'); }
+    document.body.removeChild(ta);
+  }
+});
+
+document.getElementById('favBtn').addEventListener('click', function(){
+  var v = currentVerse();
+  if(!v) return;
+  if(isFav(v)){
+    state.favorites = state.favorites.filter(function(f){ return !(f.r===v.r && f.t===v.t); });
+    toast('Removed from kept verses');
+  } else {
+    state.favorites.unshift({t:v.t, r:v.r, topic: state.topic});
+    toast('Kept — find it below');
+  }
+  renderFavs();
+  showVerse();
+});
+
+function renderFavs(){
+  var list = document.getElementById('favList');
+  if(!state.favorites.length){
+    list.innerHTML = '<div class="fav-empty">Nothing kept yet. When a verse lands, save it here.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  state.favorites.forEach(function(f){
+    var b = document.createElement('button');
+    b.className = 'fav-item';
+    b.innerHTML = '<b></b><span></span>';
+    b.querySelector('b').textContent = f.r;
+    b.querySelector('span').textContent = f.t;
+    b.addEventListener('click', function(){
+      if(f.topic){ state.topic = f.topic; state.idx = f.topic.verses.findIndex(function(x){ return x.r===f.r && x.t===f.t; }); if(state.idx<0) state.idx=0; renderChips(); showVerse(); }
+    });
+    list.appendChild(b);
+  });
+}
+
+document.getElementById('surpriseBtn').addEventListener('click', function(){
+  var cats = Object.keys(DATA);
+  var catKey = cats[Math.floor(Math.random()*cats.length)];
+  var topics = DATA[catKey].topics;
+  var topic = topics[Math.floor(Math.random()*topics.length)];
+  document.querySelectorAll('.tab').forEach(function(t){ t.setAttribute('aria-selected', t.getAttribute('data-cat')===catKey ? 'true':'false'); });
+  state.cat = catKey;
+  state.topic = topic;
+  state.idx = Math.floor(Math.random()*topic.verses.length);
+  renderChips();
+  showVerse();
+});
+
+/* Tonight's word — rotates by day of year */
+(function(){
+  var now = new Date();
+  var start = new Date(now.getFullYear(),0,0);
+  var doy = Math.floor((now - start) / 86400000);
+  var v = TONIGHT[doy % TONIGHT.length];
+  document.getElementById('tonightVerse').textContent = '“' + v.t + '”';
+  document.getElementById('tonightRef').textContent = v.r + ' · NIV';
+})();
+
+renderChips();
+</script>
+</body>
+</html>
